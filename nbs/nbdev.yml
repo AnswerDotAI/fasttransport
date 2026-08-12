@@ -1,0 +1,14 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "fasttransport"
+  site-url: "https://AnswerDotAI.github.io/fasttransport"
+  description: "Sync and async HTTP transports over httpx2, plus base classes for small REST clients"
+  repo-branch: main
+  repo-url: "https://github.com/AnswerDotAI/fasttransport"
+
+format-links:
+  - html
+  - format: commonmark
+    text: Markdown
