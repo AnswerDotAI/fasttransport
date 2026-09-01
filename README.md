@@ -51,4 +51,8 @@ acli = AsyncHttpCli('https://jsonplaceholder.typicode.com')
 await acli.get('todos/1')
 ```
 
+## Errors
+
+A client fails in three ways: an HTTP error status, a transport failure such as a timeout, and an error event arriving mid-stream. `fasttransport.errors` turns all three into one [`APIError`](https://AnswerDotAI.github.io/fasttransport/errors.html#apierror), carrying the parsed message, provider code, request id, and whether the failure is worth retrying. [fastspec](https://github.com/AnswerDotAI/fastspec), [ghapi](https://github.com/AnswerDotAI/ghapi), and [fastllm](https://github.com/AnswerDotAI/fastllm) all raise that one type, so calling code catches it once whatever the provider. The [errors page](https://AnswerDotAI.github.io/fasttransport/errors.html) shows each provider’s error shape parsed into it.
+
 The [core page](https://AnswerDotAI.github.io/fasttransport/core.html) documents the rest with runnable examples: SSE streaming, error enrichment, multipart uploads, and managing your own client.
