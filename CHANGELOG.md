@@ -2,6 +2,13 @@
 
 <!-- do not remove -->
 
+## 0.0.3
+
+### New Features
+
+- Retry a failed connection in `request` ([#3](https://github.com/AnswerDotAI/fasttransport/pull/3)), thanks to [@jph00](https://github.com/jph00)
+
+
 ## 0.0.2
 
 ### New Features
