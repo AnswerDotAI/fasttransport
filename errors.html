@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.19">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Structured API errors from HTTP responses and SSE events">
+
+<title>Errors – fasttransport</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-f2788e636de456f6409e966386820849.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="styles.css">
+<meta property="og:title" content="Errors – fasttransport">
+<meta property="og:description" content="Structured API errors from HTTP responses and SSE events">
+<meta property="og:site_name" content="fasttransport">
+<meta name="twitter:title" content="Errors – fasttransport">
+<meta name="twitter:description" content="Structured API errors from HTTP responses and SSE events">
+<meta name="twitter:card" content="summary">
+</head>
+
+<body class="nav-sidebar floating nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="./index.html">
+    <span class="navbar-title">fasttransport</span>
+    </a>
+  </div>
+        <div class="quarto-navbar-tools tools-end">
+</div>
+          <div id="quarto-search" class="" title="Search"></div>
+      </div> <!-- /container-fluid -->
+    </nav>
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./errors.html">Errors</a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">fasttransport</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./core.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">core</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./errors.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Errors</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#imports" id="toc-imports" class="nav-link active" data-scroll-target="#imports">Imports</a></li>
+  <li><a href="#purpose-and-design" id="toc-purpose-and-design" class="nav-link" data-scroll-target="#purpose-and-design">Purpose And Design</a>
+  <ul class="collapse">
+  <li><a href="#to_text" id="toc-to_text" class="nav-link" data-scroll-target="#to_text"><code>_to_text</code></a></li>
+  <li><a href="#retryable" id="toc-retryable" class="nav-link" data-scroll-target="#retryable"><code>_retryable</code></a></li>
+  <li><a href="#req_id" id="toc-req_id" class="nav-link" data-scroll-target="#req_id"><code>_req_id</code></a></li>
+  <li><a href="#apierror" id="toc-apierror" class="nav-link" data-scroll-target="#apierror"><code>APIError</code></a></li>
+  <li><a href="#api_error_from_http" id="toc-api_error_from_http" class="nav-link" data-scroll-target="#api_error_from_http"><code>api_error_from_http</code></a></li>
+  <li><a href="#api_error_from_event" id="toc-api_error_from_event" class="nav-link" data-scroll-target="#api_error_from_event"><code>api_error_from_event</code></a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/AnswerDotAI/fasttransport/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div><div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="errors.html.md"><i class="bi bi-file-code"></i>Markdown</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Errors</h1>
+</div>
+
+<div>
+  <div class="description">
+    Structured API errors from HTTP responses and SSE events
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<!-- WARNING: THIS FILE WAS AUTOGENERATED! DO NOT EDIT! -->
+<section id="imports" class="level2">
+<h2 class="anchored" data-anchor-id="imports">Imports</h2>
+<div id="bff800e1" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>enable_cachy()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<div class="ansi-escaped-output">
+<pre><span class="ansi-bright-green-fg">17:03:50 - LiteLLM:WARNING</span>: common_utils.py:979 - litellm: could not pre-load bedrock-runtime response stream shape — Bedrock event-stream decoding will be unavailable. Error: No module named 'botocore'
+
+<span class="ansi-bright-green-fg">17:03:50 - LiteLLM:WARNING</span>: common_utils.py:24 - litellm: could not pre-load sagemaker-runtime response stream shape — SageMaker event-stream decoding will be unavailable. Error: No module named 'botocore'
+</pre>
+</div>
+</div>
+</div>
+</section>
+<section id="purpose-and-design" class="level2">
+<h2 class="anchored" data-anchor-id="purpose-and-design">Purpose And Design</h2>
+<p>Every client built on these transports fails in the same three ways: an HTTP error status, a transport-level failure such as a timeout, or an error event arriving mid-stream. <a href="https://AnswerDotAI.github.io/fasttransport/errors.html#apierror"><code>APIError</code></a> is the single type all three become, so a caller writes one <code>except</code> regardless of which provider answered or which client library made the call.</p>
+<section id="to_text" class="level3">
+<h3 class="anchored" data-anchor-id="to_text"><a href="https://AnswerDotAI.github.io/fasttransport/errors.html#_to_text"><code>_to_text</code></a></h3>
+<p>Best-effort stringify helper.</p>
+</section>
+<section id="retryable" class="level3">
+<h3 class="anchored" data-anchor-id="retryable"><a href="https://AnswerDotAI.github.io/fasttransport/errors.html#_retryable"><code>_retryable</code></a></h3>
+<p>Classify transient/retryable API failures.</p>
+</section>
+<section id="req_id" class="level3">
+<h3 class="anchored" data-anchor-id="req_id"><a href="https://AnswerDotAI.github.io/fasttransport/errors.html#_req_id"><code>_req_id</code></a></h3>
+<p>Extract provider request id header when available.</p>
+<p>All three major providers (OpenAI, Anthropic, Gemini) consistently return <code>{"error": &lt;dict&gt;}</code> with a <code>message</code> field inside, so the primary <code>isinstance(err, dict)</code> branch handles them all. The remaining branches are defensive fallbacks for edge cases:</p>
+<ul>
+<li><code>elif err is not None</code> — <code>error</code> is a string (e.g.&nbsp;proxy/gateway errors)</li>
+<li><code>else</code> — no <code>error</code> key at all (e.g.&nbsp;OAuth <code>error_description</code>, or <code>detail</code>-only responses)</li>
+<li><code>except Exception: raw = self.text</code> — non-JSON responses from CDNs/gateways</li>
+</ul>
+<p>Key per-provider differences in the dict branch: - <strong><a href="https://platform.openai.com/docs/guides/error-codes">OpenAI</a></strong>: <code>error.{message, type, code, param}</code>, top-level <code>status</code> (int) - <strong><a href="https://docs.anthropic.com/en/api/errors">Anthropic</a></strong>: <code>error.{type, message}</code> only — no <code>code</code> or <code>status</code> - <strong><a href="https://ai.google.dev/api/generate-content">Gemini</a></strong>: <code>error.{code (int), message, status (string), details}</code> — <code>status</code> carries the semantic gRPC code (e.g.&nbsp;<code>INVALID_ARGUMENT</code>)</p>
+<p>The <code>status</code>→<code>code</code> promotion at the end ensures semantic codes like Gemini’s <code>"INVALID_ARGUMENT"</code> are preferred over numeric HTTP codes.</p>
+<div id="3aa1d476" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-10-27T01:15:30.635663+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-27T01:15:30.672598+00:00&quot;,&quot;total&quot;:0.036939593999996134}}" data-execution_count="7">
+<hr>
+<section id="response.error" class="level3">
+<h3 class="anchored" data-anchor-id="response.error">Response.error</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> error():</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Parse common HTTP API error shapes to (message, error_type, code, raw).</em></p>
+</section>
+</div>
+<div id="4b8a628f" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>resp <span class="op">=</span> httpx2.post(</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://api.openai.com/v1/chat/completions"</span>,</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    headers<span class="op">=</span>{<span class="st">"Authorization"</span>: <span class="st">"Bearer sk-fake123"</span>},</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    json<span class="op">=</span>{<span class="st">"model"</span>: <span class="st">"gpt-4o"</span>, <span class="st">"messages"</span>: [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"hi"</span>}]}</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>resp.json()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<pre><code>{'error': {'message': 'Incorrect API key provided: sk-fake123. You can find your API key at https://platform.openai.com/account/api-keys.',
+  'type': 'invalid_request_error',
+  'code': 'invalid_api_key',
+  'param': None},
+ 'status': 401}</code></pre>
+</div>
+</div>
+<div id="5d98d8cf" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>resp.error()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>{ <span class="st">'code'</span>: <span class="st">'invalid_api_key'</span>,</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">'message'</span>: <span class="st">'Incorrect API key provided: sk-fake123. You can find your API '</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>             <span class="st">'key at https://platform.openai.com/account/api-keys.'</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">'raw'</span>: { <span class="st">'error'</span>: { <span class="st">'code'</span>: <span class="st">'invalid_api_key'</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                      <span class="st">'message'</span>: <span class="st">'Incorrect API key provided: sk-fake123. You '</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">'can find your API key at '</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">'https://platform.openai.com/account/api-keys.'</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>                      <span class="st">'param'</span>: <span class="va">None</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>                      <span class="st">'type'</span>: <span class="st">'invalid_request_error'</span>},</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>           <span class="st">'status'</span>: <span class="dv">401</span>},</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="st">'type'</span>: <span class="st">'invalid_request_error'</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="69322fb9" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>resp <span class="op">=</span> httpx2.post(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://api.anthropic.com/v1/messages"</span>,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    headers<span class="op">=</span>{<span class="st">"x-api-key"</span>: <span class="st">"sk-fake123"</span>, <span class="st">"anthropic-version"</span>: <span class="st">"2023-06-01"</span>},</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    json<span class="op">=</span>{<span class="st">"model"</span>: <span class="st">"claude-sonnet-4-20250514"</span>, <span class="st">"max_tokens"</span>: <span class="dv">10</span>, <span class="st">"messages"</span>: [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"hi"</span>}]}</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>resp.json()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<pre><code>{'type': 'error',
+ 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'},
+ 'request_id': 'req_011CcnV9hsFrgAQVhGzr7EsL'}</code></pre>
+</div>
+</div>
+<div id="253cd5b9" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>resp.error()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>{ <span class="st">'code'</span>: <span class="st">'authentication_error'</span>,</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">'message'</span>: <span class="st">'invalid x-api-key'</span>,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">'raw'</span>: { <span class="st">'error'</span>: { <span class="st">'message'</span>: <span class="st">'invalid x-api-key'</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                      <span class="st">'type'</span>: <span class="st">'authentication_error'</span>},</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>           <span class="st">'request_id'</span>: <span class="st">'req_011CcnV9hsFrgAQVhGzr7EsL'</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>           <span class="st">'type'</span>: <span class="st">'error'</span>},</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">'type'</span>: <span class="st">'authentication_error'</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="c7dd4616" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>resp <span class="op">=</span> httpx2.post(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=fake123"</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    json<span class="op">=</span>{<span class="st">"contents"</span>: [{<span class="st">"parts"</span>: [{<span class="st">"text"</span>: <span class="st">"hi"</span>}]}]}</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>resp.json()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<pre><code>{'error': {'code': 400,
+  'message': 'API key not valid. Please pass a valid API key.',
+  'status': 'INVALID_ARGUMENT',
+  'details': [{'@type': 'type.googleapis.com/google.rpc.ErrorInfo',
+    'reason': 'API_KEY_INVALID',
+    'domain': 'googleapis.com',
+    'metadata': {'service': 'generativelanguage.googleapis.com'}},
+   {'@type': 'type.googleapis.com/google.rpc.LocalizedMessage',
+    'locale': 'en-US',
+    'message': 'API key not valid. Please pass a valid API key.'}]}}</code></pre>
+</div>
+</div>
+<div id="ccff6fc5" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>resp.error()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display cell-output-markdown">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>{ <span class="st">'code'</span>: <span class="st">'INVALID_ARGUMENT'</span>,</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">'message'</span>: <span class="st">'API key not valid. Please pass a valid API key.'</span>,</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">'raw'</span>: { <span class="st">'error'</span>: { <span class="st">'code'</span>: <span class="dv">400</span>,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>                      <span class="st">'details'</span>: [ { <span class="st">'@type'</span>: <span class="st">'type.googleapis.com/google.rpc.ErrorInfo'</span>,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>                                     <span class="st">'domain'</span>: <span class="st">'googleapis.com'</span>,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>                                     <span class="st">'metadata'</span>: { <span class="st">'service'</span>: <span class="st">'generativelanguage.googleapis.com'</span>},</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>                                     <span class="st">'reason'</span>: <span class="st">'API_KEY_INVALID'</span>},</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>                                   { <span class="st">'@type'</span>: <span class="st">'type.googleapis.com/google.rpc.LocalizedMessage'</span>,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>                                     <span class="st">'locale'</span>: <span class="st">'en-US'</span>,</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>                                     <span class="st">'message'</span>: <span class="st">'API key not valid. Please '</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>                                                <span class="st">'pass a valid API key.'</span>}],</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>                      <span class="st">'message'</span>: <span class="st">'API key not valid. Please pass a valid API '</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>                                 <span class="st">'key.'</span>,</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>                      <span class="st">'status'</span>: <span class="st">'INVALID_ARGUMENT'</span>}},</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">'type'</span>: <span class="st">'INVALID_ARGUMENT'</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<p>All three providers use different SSE error event shapes:</p>
+<ul>
+<li><strong>OpenAI</strong> (<a href="https://developers.openai.com/api/reference/resources/responses/streaming-events">docs</a>): flat <code>{code, message}</code> — no nested <code>error</code> key, <code>code</code> is a string enum (e.g.&nbsp;<code>"rate_limit_exceeded"</code>)</li>
+<li><strong>Anthropic</strong> (<a href="https://docs.anthropic.com/en/api/messages-streaming">docs</a>): <code>{type: "error", error: {type, message}}</code> — no <code>code</code> or <code>status</code></li>
+<li><strong>Gemini</strong> (<a href="https://ai.google.dev/api/generate-content#method:-models.streamgeneratecontent">docs</a>): <code>{error: {code, message, status, details}}</code> — <code>code</code> is numeric, <code>status</code> is the semantic gRPC code</li>
+</ul>
+<p>The extraction logic: 1. <code>isinstance(event["error"], dict)</code> → use nested dict (Anthropic, Gemini) 2. <code>isinstance(event, dict)</code> but no nested <code>error</code> → use whole dict (OpenAI flat shape) 3. Not a dict at all → wrap as <code>{"message": stringified}</code> (defensive fallback)</p>
+<p><strong>NB</strong>: Unlike <code>error()</code>, this function does <em>not</em> promote Gemini’s semantic <code>status</code> over numeric <code>code</code> — so Gemini returns <code>code=500</code> rather than <code>code="INTERNAL"</code>. This may be worth aligning.</p>
+<div id="a36540b2" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>oai_sse <span class="op">=</span> {<span class="st">"code"</span>: <span class="st">"rate_limit_exceeded"</span>, <span class="st">"message"</span>: <span class="st">"Rate limit exceeded"</span>}</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>ant_sse <span class="op">=</span> {<span class="st">"type"</span>: <span class="st">"error"</span>, <span class="st">"error"</span>: {<span class="st">"type"</span>: <span class="st">"overloaded_error"</span>, <span class="st">"message"</span>: <span class="st">"Overloaded"</span>}}</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>gem_sse <span class="op">=</span> {<span class="st">"error"</span>: {<span class="st">"code"</span>: <span class="dv">500</span>, <span class="st">"message"</span>: <span class="st">"An internal error has occurred"</span>, <span class="st">"status"</span>: <span class="st">"INTERNAL"</span>}}</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, evt <span class="kw">in</span> [(<span class="st">"OpenAI"</span>, oai_sse), (<span class="st">"Anthropic"</span>, ant_sse), (<span class="st">"Gemini"</span>, gem_sse)]:</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    error <span class="op">=</span> _parse_sse_error_event(evt)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">:10s}</span><span class="ss"> | msg=</span><span class="sc">{</span>error<span class="sc">.</span>message<span class="sc">!r:45s}</span><span class="ss"> | et=</span><span class="sc">{</span>error<span class="sc">.</span><span class="bu">type</span><span class="sc">!r:25s}</span><span class="ss"> | code=</span><span class="sc">{</span>error<span class="sc">.</span>code<span class="sc">!r}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>OpenAI     | msg='Rate limit exceeded'                         | et=''                        | code='rate_limit_exceeded'
+Anthropic  | msg='Overloaded'                                  | et='overloaded_error'        | code='overloaded_error'
+Gemini     | msg='An internal error has occurred'              | et='INTERNAL'                | code='INTERNAL'</code></pre>
+</div>
+</div>
+</section>
+<section id="apierror" class="level3">
+<h3 class="anchored" data-anchor-id="apierror"><a href="https://AnswerDotAI.github.io/fasttransport/errors.html#apierror"><code>APIError</code></a></h3>
+<p>Structured API failure object with optional context.</p>
+<div id="e1cda3ec" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-10-27T01:15:30.696914+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-27T01:15:30.701182+00:00&quot;,&quot;total&quot;:0.004272438000000989}}" data-execution_count="10">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fasttransport/blob/main/fasttransport/errors.py#L92" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="apierror-1" class="level3">
+<h3 class="anchored" data-anchor-id="apierror-1">APIError</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> APIError(</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    message:<span class="bu">str</span>, <span class="op">*</span>, provider:<span class="bu">str</span><span class="op">=</span><span class="st">''</span>, model:<span class="bu">str</span><span class="op">=</span><span class="st">''</span>, endpoint:<span class="bu">str</span><span class="op">=</span><span class="st">''</span>, status_code:NoneType<span class="op">=</span><span class="va">None</span>, error_type:<span class="bu">str</span><span class="op">=</span><span class="st">''</span>,</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    code:NoneType<span class="op">=</span><span class="va">None</span>, request_id:<span class="bu">str</span><span class="op">=</span><span class="st">''</span>, retryable:NoneType<span class="op">=</span><span class="va">None</span>, raw:NoneType<span class="op">=</span><span class="va">None</span>, response:NoneType<span class="op">=</span><span class="va">None</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Structured API error with optional context.</em></p>
+</section>
+</div>
+<div id="1ad7307c" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>resp <span class="op">=</span> httpx2.post(</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://api.anthropic.com/v1/messages"</span>,</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    headers<span class="op">=</span>{<span class="st">"x-api-key"</span>: <span class="st">"sk-fake123"</span>, <span class="st">"anthropic-version"</span>: <span class="st">"2023-06-01"</span>},</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    json<span class="op">=</span>{<span class="st">"model"</span>: <span class="st">"claude-sonnet-4-20250514"</span>, <span class="st">"max_tokens"</span>: <span class="dv">10</span>, <span class="st">"messages"</span>: [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"hi"</span>}]}</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>e <span class="op">=</span> resp.error()</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>err <span class="op">=</span> APIError(e.message, provider<span class="op">=</span><span class="st">"anthropic"</span>, model<span class="op">=</span><span class="st">"claude-sonnet-4-20250514"</span>,</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>               endpoint<span class="op">=</span><span class="st">"/v1/messages"</span>, status_code<span class="op">=</span>resp.status_code,</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>               error_type<span class="op">=</span>e.<span class="bu">type</span>, code<span class="op">=</span>e.code, request_id<span class="op">=</span>_req_id(resp.headers), raw<span class="op">=</span>e.raw)</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>err</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<pre><code>APIError(message='invalid x-api-key', provider='anthropic', model='claude-sonnet-4-20250514', endpoint='/v1/messages', status_code=401, error_type='authentication_error', code='authentication_error', request_id='req_011CcnV9kwJXLNDcihuhSGPv')</code></pre>
+</div>
+</div>
+<div id="d6f12a92" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(err)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>APIError(message='invalid x-api-key', provider='anthropic', model='claude-sonnet-4-20250514', endpoint='/v1/messages', status_code=401, error_type='authentication_error', code='authentication_error', request_id='req_011CcnV9kwJXLNDcihuhSGPv')</code></pre>
+</div>
+</div>
+<div id="b5140f19" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>resp <span class="op">=</span> httpx2.post(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://api.anthropic.com/v1/messages"</span>,</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    headers<span class="op">=</span>{<span class="st">"x-api-key"</span>: <span class="st">"sk-fake123"</span>, <span class="st">"anthropic-version"</span>: <span class="st">"2023-06-01"</span>},</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    json<span class="op">=</span>{<span class="st">"model"</span>: <span class="st">"claude-sonnet-4-20250514"</span>, <span class="st">"max_tokens"</span>: <span class="dv">10</span>, <span class="st">"messages"</span>: [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"hello!"</span>}]}</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>e <span class="op">=</span> resp.error()</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>err <span class="op">=</span> APIError(e.message, provider<span class="op">=</span><span class="st">"anthropic"</span>, model<span class="op">=</span><span class="st">"claude-sonnet-4-20250514"</span>,</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>               endpoint<span class="op">=</span><span class="st">"/v1/messages"</span>, status_code<span class="op">=</span>resp.status_code,</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>               error_type<span class="op">=</span>e.<span class="bu">type</span>, code<span class="op">=</span>e.code, request_id<span class="op">=</span>_req_id(resp.headers), raw<span class="op">=</span>e.raw)</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>err</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<pre><code>APIError(message='invalid x-api-key', provider='anthropic', model='claude-sonnet-4-20250514', endpoint='/v1/messages', status_code=401, error_type='authentication_error', code='authentication_error', request_id='req_011CcnV9nc1yMXtJb4XAkveA')</code></pre>
+</div>
+</div>
+<div id="e9546c3a" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>test_eq(APIError(<span class="st">"invalid x-api-key"</span>, status_code<span class="op">=</span><span class="dv">401</span>, error_type<span class="op">=</span><span class="st">"authentication_error"</span>).retryable, <span class="va">False</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>test_eq(APIError(<span class="st">"Bad credentials"</span>, status_code<span class="op">=</span><span class="dv">401</span>, error_type<span class="op">=</span><span class="st">"401"</span>, code<span class="op">=</span><span class="st">"401"</span>).retryable, <span class="va">False</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="api_error_from_http" class="level3">
+<h3 class="anchored" data-anchor-id="api_error_from_http"><code>api_error_from_http</code></h3>
+<p>Converts <code>httpx2.HTTPStatusError</code> into <a href="https://AnswerDotAI.github.io/fasttransport/errors.html#apierror"><code>APIError</code></a>. The original response rides along as <code>.response</code>, so headers and body stay reachable after the conversion.</p>
+<div id="78f27808" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-10-27T01:15:30.702722+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-27T01:15:30.704735+00:00&quot;,&quot;total&quot;:0.002015756999995233}}" data-execution_count="12">
+<hr>
+<section id="httpstatuserror.api_error" class="level3">
+<h3 class="anchored" data-anchor-id="httpstatuserror.api_error">HTTPStatusError.api_error</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> api_error(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>, provider:<span class="bu">str</span><span class="op">=</span><span class="st">''</span>, model:<span class="bu">str</span><span class="op">=</span><span class="st">''</span>, endpoint:<span class="bu">str</span><span class="op">=</span><span class="st">''</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Build APIError from httpx2 HTTPStatusError.</em></p>
+</section>
+</div>
+<div id="90778e19" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>resp <span class="op">=</span> httpx2.post(</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://api.anthropic.com/v1/messages"</span>,</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    headers<span class="op">=</span>{<span class="st">"x-api-key"</span>: <span class="st">"sk-fake123"</span>, <span class="st">"anthropic-version"</span>: <span class="st">"2023-06-01"</span>},</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    json<span class="op">=</span>{<span class="st">"model"</span>: <span class="st">"claude-sonnet-4-20250514"</span>, <span class="st">"max_tokens"</span>: <span class="dv">10</span>, <span class="st">"messages"</span>: [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"test api_error_from_http"</span>}]}</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>: resp.raise_for_status()</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> httpx2.HTTPStatusError <span class="im">as</span> exc: ae <span class="op">=</span> exc.api_error(provider<span class="op">=</span><span class="st">"anthropic"</span>, model<span class="op">=</span><span class="st">"claude-sonnet-4-20250514"</span>)</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>test_is(ae.response, resp)</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ae)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>APIError(message='invalid x-api-key', provider='anthropic', model='claude-sonnet-4-20250514', endpoint='POST /v1/messages', status_code=401, error_type='authentication_error', code='authentication_error', request_id='req_011CcnV9pHij68bkrvuB6Yco')</code></pre>
+</div>
+</div>
+<div id="d2d72429" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>resp <span class="op">=</span> httpx2.get(</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://api.github.com/repos/AnswerDotAI/nonexistent-repo-12345"</span>,</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    headers<span class="op">=</span>{<span class="st">"Authorization"</span>: <span class="st">"token ghp_fake123"</span>}</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>: resp.raise_for_status()</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> httpx2.HTTPStatusError <span class="im">as</span> exc: <span class="bu">print</span>(exc.api_error())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>APIError(message='Bad credentials', endpoint='GET /repos/AnswerDotAI/nonexistent-repo-12345', status_code=401, error_type='401', code='401')</code></pre>
+</div>
+</div>
+<div id="478685fd" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>resp <span class="op">=</span> httpx2.post(<span class="st">"https://api.anthropic.com/v1/messages"</span>,</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    headers<span class="op">=</span>{<span class="st">"x-api-key"</span>:<span class="st">"sk-fake123"</span>,<span class="st">"anthropic-version"</span>:<span class="st">"2023-06-01"</span>},</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    json<span class="op">=</span>{<span class="st">"model"</span>:<span class="st">"claude-sonnet-4-20250514"</span>,<span class="st">"max_tokens"</span>:<span class="dv">10</span>,<span class="st">"messages"</span>:[{<span class="st">"role"</span>:<span class="st">"user"</span>,<span class="st">"content"</span>:<span class="st">"hi"</span>}]})</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>: resp.raise_for_status()</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> httpx2.HTTPStatusError <span class="im">as</span> exc: ae <span class="op">=</span> exc.api_error(provider<span class="op">=</span><span class="st">"anthropic"</span>)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>test_eq(ae.status_code, <span class="dv">401</span>)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>test_eq(ae.retryable, <span class="va">False</span>)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>test_eq(ae.error_type, <span class="st">"authentication_error"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="7a14b221" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-10-27T01:15:30.706076+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-27T01:15:30.707970+00:00&quot;,&quot;total&quot;:0.0018962879999975257}}" data-execution_count="14">
+<hr>
+<section id="requesterror.api_error" class="level3">
+<h3 class="anchored" data-anchor-id="requesterror.api_error">RequestError.api_error</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> api_error(</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>, provider:<span class="bu">str</span><span class="op">=</span><span class="st">''</span>, model:<span class="bu">str</span><span class="op">=</span><span class="st">''</span>, endpoint:<span class="bu">str</span><span class="op">=</span><span class="st">''</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Build APIError from httpx2 RequestError (transport-level failure).</em></p>
+</section>
+</div>
+<div id="f281e2a3" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>req <span class="op">=</span> httpx2.Request(<span class="st">"POST"</span>, <span class="st">"https://api.openai.com/v1/chat/completions"</span>)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>err <span class="op">=</span> httpx2.ConnectError(<span class="st">"connection refused"</span>, request<span class="op">=</span>req)</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>ae <span class="op">=</span> err.api_error(provider<span class="op">=</span><span class="st">"openai"</span>, model<span class="op">=</span><span class="st">"gpt-4o"</span>)</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>test_eq(ae.retryable, <span class="va">True</span>)</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>test_eq(ae.error_type, <span class="st">"ConnectError"</span>)</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>test_eq(ae.endpoint, <span class="st">"POST /v1/chat/completions"</span>)</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>test_eq(ae.provider, <span class="st">"openai"</span>)</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>test_eq(ae.model, <span class="st">"gpt-4o"</span>)</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>test_is(ae.raw, err)</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>err <span class="op">=</span> httpx2.ReadTimeout(<span class="st">"read timed out"</span>, request<span class="op">=</span>req)</span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>test_eq(err.api_error().retryable, <span class="va">True</span>)</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>test_eq(err.api_error().error_type, <span class="st">"ReadTimeout"</span>)</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>err <span class="op">=</span> httpx2.RemoteProtocolError(<span class="st">"server disconnected"</span>, request<span class="op">=</span>req)</span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>test_eq(err.api_error().retryable, <span class="va">True</span>)</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>err <span class="op">=</span> httpx2.UnsupportedProtocol(<span class="st">"bad scheme"</span>, request<span class="op">=</span>req)</span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>test_eq(err.api_error(provider<span class="op">=</span><span class="st">"anthropic"</span>).retryable, <span class="va">False</span>)</span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>test_eq(err.api_error().error_type, <span class="st">"UnsupportedProtocol"</span>)</span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a>err <span class="op">=</span> httpx2.DecodingError(<span class="st">"bad gzip"</span>, request<span class="op">=</span>req)</span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a>test_eq(err.api_error().retryable, <span class="va">False</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="03980d0b" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="cf">try</span>: httpx2.get(<span class="st">"http://127.0.0.1:1/nope"</span>, timeout<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="cf">except</span> httpx2.RequestError <span class="im">as</span> exc: ae <span class="op">=</span> exc.api_error(provider<span class="op">=</span><span class="st">"local"</span>)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>test_eq(ae.retryable, <span class="va">True</span>)</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>test_eq(ae.provider, <span class="st">"local"</span>)</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>test_eq(ae.endpoint, <span class="st">"GET /nope"</span>)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">isinstance</span>(ae.raw, httpx2.RequestError)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="api_error_from_event" class="level3">
+<h3 class="anchored" data-anchor-id="api_error_from_event"><a href="https://AnswerDotAI.github.io/fasttransport/errors.html#api_error_from_event"><code>api_error_from_event</code></a></h3>
+<p>Build APIError from provider SSE/event-level error payload</p>
+<div id="20d0fd42" class="cell" data-quarto-private-1="{&quot;key&quot;:&quot;execution&quot;,&quot;value&quot;:{&quot;iopub.execute_input&quot;:&quot;2026-10-27T01:15:30.709083+00:00&quot;,&quot;shell.execute_reply&quot;:&quot;2026-10-27T01:15:30.710750+00:00&quot;,&quot;total&quot;:0.0016695860000055518}}" data-execution_count="16">
+<hr>
+<p><a href="https://github.com/AnswerDotAI/fasttransport/blob/main/fasttransport/errors.py#L166" target="_blank" style="float:right; font-size:smaller">source</a></p>
+<section id="api_error_from_event-1" class="level3">
+<h3 class="anchored" data-anchor-id="api_error_from_event-1">api_error_from_event</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> api_error_from_event(</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    event, <span class="op">*</span>, provider:<span class="bu">str</span><span class="op">=</span><span class="st">''</span>, model:<span class="bu">str</span><span class="op">=</span><span class="st">''</span>, endpoint:<span class="bu">str</span><span class="op">=</span><span class="st">''</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>):</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Build APIError from provider SSE/event-level error payload.</em></p>
+</section>
+</div>
+<div id="2ac52ab8" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, evt <span class="kw">in</span> [(<span class="st">"OpenAI"</span>, oai_sse), (<span class="st">"Anthropic"</span>, ant_sse), (<span class="st">"Gemini"</span>, gem_sse)]:</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    err <span class="op">=</span> api_error_from_event(evt, provider<span class="op">=</span>name.lower())</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(err)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>APIError(message='Rate limit exceeded', provider='openai', code='rate_limit_exceeded', retryable=True)
+APIError(message='Overloaded', provider='anthropic', error_type='overloaded_error', code='overloaded_error', retryable=True)
+APIError(message='An internal error has occurred', provider='gemini', error_type='INTERNAL', code='INTERNAL', retryable=True)</code></pre>
+</div>
+</div>
+<div id="df7880ee" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>test_eq(api_error_from_event(oai_sse).retryable, <span class="va">True</span>)   <span class="co"># code='rate_limit_exceeded'</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>test_eq(api_error_from_event(ant_sse).retryable, <span class="va">True</span>)   <span class="co"># overloaded_error</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>test_eq(api_error_from_event(gem_sse).retryable, <span class="va">True</span>)   <span class="co"># INTERNAL</span></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>test_eq(api_error_from_event({<span class="st">"error"</span>: {<span class="st">"message"</span>: <span class="st">"API rate limit exceeded"</span>}}).retryable, <span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Works with any API — the <code>provider</code> and <code>model</code> fields are optional context that higher-level libraries can populate:</p>
+<div id="a77d67f7" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Generic API error — no provider/model needed</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>gh_evt <span class="op">=</span> {<span class="st">"error"</span>: {<span class="st">"message"</span>: <span class="st">"API rate limit exceeded"</span>, <span class="st">"documentation_url"</span>: <span class="st">"https://docs.github.com/rest"</span>}}</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(api_error_from_event(gh_evt, endpoint<span class="op">=</span><span class="st">"GET /repos/</span><span class="sc">{owner}</span><span class="st">/</span><span class="sc">{repo}</span><span class="st">"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>APIError(message='API rate limit exceeded', endpoint='GET /repos/{owner}/{repo}', retryable=True)</code></pre>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/AnswerDotAI\.github\.io\/fasttransport");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<footer class="footer"><div class="nav-footer"><div class="nav-footer-center"><div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/AnswerDotAI/fasttransport/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></div></div></footer></body></html>
