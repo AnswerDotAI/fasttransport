@@ -14,6 +14,7 @@ import asyncio, time, httpx2, json as jsonlib
 from functools import partial
 from contextlib import nullcontext
 from httpx2 import EventSource
+import fasttransport.errors
 
 # %% ../nbs/00_core.ipynb #09ff28d5
 class ProtocolError(Exception):
