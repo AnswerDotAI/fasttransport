@@ -34,3 +34,4 @@ version = {attr = "fasttransport.__version__"}
 include = ["fasttransport"]
 
 [tool.nbdev]
+to_meta = ["export"]
